@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react"
 import { motion, useScroll, useTransform } from "framer-motion"
-import { ArrowDown, ExternalLink, Cloud, Wind, Settings } from "lucide-react"
+import { ArrowDown, ExternalLink, Cloud, Wind, Settings, Globe } from "lucide-react"
 import Link from "next/link"
 
 export default function Home() {
@@ -18,23 +18,45 @@ export default function Home() {
   const y = useTransform(scrollYProgress, [0, 0.2], [0, -50])
 
   const [isVisible, setIsVisible] = useState(false)
+  const [text, setText] = useState("")
+  const fullText = "Воздушный Севастополь"
+  const [windowSize, setWindowSize] = useState({ width: 0, height: 0 })
+  const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
+    setIsMounted(true)
     setIsVisible(true)
+
+    // Безопасно получаем размеры окна только на клиенте
+    setWindowSize({
+      width: window.innerWidth,
+      height: window.innerHeight,
+    })
 
     const handleScroll = () => {
       setScrollY(window.scrollY)
     }
 
+    const handleResize = () => {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      })
+    }
+
     window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
+    window.addEventListener("resize", handleResize)
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll)
+      window.removeEventListener("resize", handleResize)
+    }
   }, [])
 
-  // Текст с эффектом печатающей машинки
-  const [text, setText] = useState("")
-  const fullText = "Воздушный Севастополь"
-
+  // Эффект печатающей машинки
   useEffect(() => {
+    if (!isMounted) return
+
     let i = 0
     const typingInterval = setInterval(() => {
       if (i < fullText.length) {
@@ -46,7 +68,19 @@ export default function Home() {
     }, 100)
 
     return () => clearInterval(typingInterval)
-  }, [])
+  }, [isMounted])
+
+  // Если компонент не смонтирован (серверный рендеринг), возвращаем заглушку
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-black to-blue-950 flex items-center justify-center">
+        <div className="text-white text-center">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6">Воздушный Севастополь</h1>
+          <p className="text-white/80">Загрузка...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <main className="relative min-h-screen overflow-hidden" ref={containerRef}>
@@ -68,12 +102,12 @@ export default function Home() {
             className="absolute text-white/30"
             initial={{
               x: -100,
-              y: Math.random() * window.innerHeight,
+              y: Math.random() * windowSize.height,
               opacity: 0.3 + Math.random() * 0.4,
               scale: 0.5 + Math.random() * 2,
             }}
             animate={{
-              x: window.innerWidth + 100,
+              x: windowSize.width + 100,
               opacity: [0.3 + Math.random() * 0.4, 0.5, 0.3 + Math.random() * 0.4],
             }}
             transition={{
@@ -272,9 +306,9 @@ export default function Home() {
             </p>
           </motion.section>
 
-          {/* Ссылка на страницу развертывания */}
+          {/* Ссылки на служебные страницы */}
           <motion.div
-            className="mt-12 text-center"
+            className="mt-12 flex flex-col sm:flex-row gap-4 justify-center"
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             transition={{ duration: 0.6 }}
@@ -285,7 +319,15 @@ export default function Home() {
               className="inline-flex items-center text-white/80 hover:text-white transition-colors"
             >
               <Settings className="w-5 h-5 mr-2" />
-              Инструкция по развертыванию сайта
+              Инструкция по развертыванию
+            </Link>
+
+            <Link
+              href="/domain-setup"
+              className="inline-flex items-center text-white/80 hover:text-white transition-colors"
+            >
+              <Globe className="w-5 h-5 mr-2" />
+              Настройка домена
             </Link>
           </motion.div>
         </div>
@@ -353,7 +395,7 @@ export default function Home() {
               top: `${Math.random() * 100}%`,
             }}
             animate={{
-              y: [0, window.innerHeight],
+              y: [0, windowSize.height],
               opacity: [0, 0.7, 0],
             }}
             transition={{

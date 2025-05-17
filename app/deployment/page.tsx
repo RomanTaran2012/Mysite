@@ -1,3 +1,5 @@
+export const dynamic = "force-static"
+
 import { DeploymentGuide } from "@/components/deployment-guide"
 
 export default function DeploymentPage() {

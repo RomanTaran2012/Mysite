@@ -37,6 +37,8 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Отключаем серверные компоненты для страниц, которые используют window
+  serverComponents: false,
 }
 
 export default nextConfig
